@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5',
+        model: 'claude-3-5-haiku-latest',
         max_tokens: 300,
         system: system,
         messages: anthropicMessages
@@ -66,8 +66,7 @@ module.exports = async (req, res) => {
       .trim();
 
     return res.status(200).json({
-      reply,
-      raw: data
+      reply
     });
   } catch (error) {
     console.error('API ERROR:', error);
