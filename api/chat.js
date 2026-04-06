@@ -24,9 +24,32 @@ module.exports = async (req, res) => {
   try {
     const { system, messages } = req.body;
 
-    return res.status(200).json({
-      content: [{ text: 'API working' }]
+    const response = await fetch('https://api.openai.com/v1/responses', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'gpt-4.1-mini',
+        input: [
+          { role: 'system', content: system },
+          ...messages
+        ]
+      })
     });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('OPENAI ERROR:', data);
+      return res.status(response.status).json({
+        error: data.error?.message || 'OpenAI request failed'
+      });
+    }
+
+    return res.status(200).json(data);
+
   } catch (error) {
     console.error('API ERROR:', error);
     return res.status(500).json({
