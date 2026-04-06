@@ -24,32 +24,51 @@ module.exports = async (req, res) => {
   try {
     const { system, messages } = req.body;
 
-    const response = await fetch('https://api.openai.com/v1/responses', {
+    const anthropicMessages = (messages || []).map((m) => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: [
+        {
+          type: 'text',
+          text: m.content || ''
+        }
+      ]
+    }));
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-mini',
-        input: [
-          { role: 'system', content: system },
-          ...messages
-        ]
+        model: 'claude-haiku-4-5',
+        max_tokens: 300,
+        system: system,
+        messages: anthropicMessages
       })
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('OPENAI ERROR:', data);
+      console.error('ANTHROPIC ERROR:', data);
       return res.status(response.status).json({
-        error: data.error?.message || 'OpenAI request failed'
+        error: data.error?.message || 'Anthropic request failed',
+        raw: data
       });
     }
 
-    return res.status(200).json(data);
+    const reply = (data.content || [])
+      .filter(block => block.type === 'text')
+      .map(block => block.text)
+      .join('\n')
+      .trim();
 
+    return res.status(200).json({
+      reply,
+      raw: data
+    });
   } catch (error) {
     console.error('API ERROR:', error);
     return res.status(500).json({
