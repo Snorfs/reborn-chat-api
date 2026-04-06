@@ -1,14 +1,18 @@
 module.exports = async (req, res) => {
   const allowedOrigins = [
-    'https://www.rebornwithmichael.com',
-    'https://rebornwithmichael.com'
-  ];
+  'https://www.rebornwithmichael.com',
+  'https://rebornwithmichael.com'
+];
 
-  const origin = req.headers.origin;
+const origin = req.headers.origin;
 
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
+if (origin && (
+  allowedOrigins.includes(origin) ||
+  origin.includes('.kajabi.com') ||
+  origin.includes('.mykajabi.com')
+)) {
+  res.setHeader('Access-Control-Allow-Origin', origin);
+}
 
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
